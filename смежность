@@ -1,0 +1,76 @@
+import heapq
+
+# Пример графа (словарь смежности)
+graph = {
+    'A': {'B': 1, 'C': 4},
+    'B': {'A': 1, 'C': 2, 'D': 5},
+    'C': {'A': 4, 'B': 2, 'D': 1},
+    'D': {'B': 5, 'C': 1}
+}
+
+# Жадный алгоритм (ближайший сосед)
+def greedy_shortest_path(graph, start, end):
+    path = [start]
+    current = start
+    while current != end:
+        neighbors = graph[current]
+        next_node = min(neighbors, key=lambda x: neighbors[x])
+        path.append(next_node)
+        current = next_node
+    return path
+
+# Алгоритм A*
+def a_star_shortest_path(graph, start, end):
+    def heuristic(node):
+        # Простая эвристика (можно улучшить)
+        return 0
+
+    open_set = []
+    heapq.heappush(open_set, (0, start))
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
+
+    while open_set:
+        _, current = heapq.heappop(open_set)
+        if current == end:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            return path[::-1]
+
+        for neighbor, weight in graph[current].items():
+            tentative_g_score = g_score[current] + weight
+            if tentative_g_score < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g_score
+                f_score = tentative_g_score + heuristic(neighbor)
+                heapq.heappush(open_set, (f_score, neighbor))
+
+    return None
+
+# Диалектический поиск (сравниваем два алгоритма)
+def dialectical_shortest_path(graph, start, end):
+    # Жадный алгоритм
+    greedy_path = greedy_shortest_path(graph, start, end)
+    greedy_cost = sum(graph[greedy_path[i]][greedy_path[i+1]] for i in range(len(greedy_path)-1))
+
+    # Алгоритм A*
+    a_star_path = a_star_shortest_path(graph, start, end)
+    a_star_cost = sum(graph[a_star_path[i]][a_star_path[i+1]] for i in range(len(a_star_path)-1))
+
+    # Выбор лучшего пути
+    if greedy_cost < a_star_cost:
+        print("Жадный алгоритм победил!")
+        return greedy_path
+    else:
+        print("A* победил!")
+        return a_star_path
+
+# Пример использования
+start = 'A'
+end = 'D'
+path = dialectical_shortest_path(graph, start, end)
+print(f"Кратчайший путь от {start} до {end}: {path}")
